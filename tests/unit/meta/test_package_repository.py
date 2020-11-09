@@ -40,7 +40,7 @@ def test_apt_name():
         architectures=["amd64", "i386"],
         components=["main", "multiverse"],
         formats=["deb", "deb-src"],
-        key_id="test-key-id",
+        key_id="A" * 40,
         key_server="keyserver.ubuntu.com",
         suites=["xenial", "xenial-updates"],
         url="http://archive.ubuntu.com/ubuntu",
@@ -54,7 +54,7 @@ def test_apt_name():
 )
 def test_apt_valid_architectures(arch):
     package_repo = PackageRepositoryApt(
-        key_id="test-key-id", url="http://test", architectures=[arch]
+        key_id="A" * 40, url="http://test", architectures=[arch]
     )
 
     assert package_repo.architectures == [arch]
@@ -63,7 +63,7 @@ def test_apt_valid_architectures(arch):
 @pytest.mark.parametrize("arch", ["", "armv8"])
 def test_apt_invalid_architectures(arch):
     with pytest.raises(errors.PackageRepositoryValidationError) as exc_info:
-        PackageRepositoryApt(key_id="test-key-id", url="", architectures=[arch])
+        PackageRepositoryApt(key_id="A" * 40, url="", architectures=[arch])
 
     assert exc_info.value.brief == f"Invalid architecture '{arch}'."
     assert (
@@ -79,7 +79,7 @@ def test_apt_invalid_architectures(arch):
 def test_apt_invalid_url():
     with pytest.raises(errors.PackageRepositoryValidationError) as exc_info:
         PackageRepositoryApt(
-            key_id="test-key-id", url="",
+            key_id="A" * 40, url="",
         )
 
     assert exc_info.value.brief == "Invalid URL ''."
@@ -93,7 +93,7 @@ def test_apt_invalid_url():
 def test_apt_invalid_path():
     with pytest.raises(errors.PackageRepositoryValidationError) as exc_info:
         PackageRepositoryApt(
-            key_id="test-key-id", path="", url="http://archive.ubuntu.com/ubuntu",
+            key_id="A" * 40, path="", url="http://archive.ubuntu.com/ubuntu",
         )
 
     assert exc_info.value.brief == "Invalid path ''."
@@ -107,7 +107,7 @@ def test_apt_invalid_path():
 def test_apt_invalid_path_with_suites():
     with pytest.raises(errors.PackageRepositoryValidationError) as exc_info:
         PackageRepositoryApt(
-            key_id="test-key-id",
+            key_id="A" * 40,
             path="/",
             suites=["xenial", "xenial-updates"],
             url="http://archive.ubuntu.com/ubuntu",
@@ -127,7 +127,7 @@ def test_apt_invalid_path_with_suites():
 def test_apt_invalid_path_with_components():
     with pytest.raises(errors.PackageRepositoryValidationError) as exc_info:
         PackageRepositoryApt(
-            key_id="test-key-id",
+            key_id="A" * 40,
             path="/",
             components=["main"],
             url="http://archive.ubuntu.com/ubuntu",
@@ -146,7 +146,7 @@ def test_apt_invalid_path_with_components():
 def test_apt_invalid_missing_components():
     with pytest.raises(errors.PackageRepositoryValidationError) as exc_info:
         PackageRepositoryApt(
-            key_id="test-key-id",
+            key_id="A" * 40,
             suites=["xenial", "xenial-updates"],
             url="http://archive.ubuntu.com/ubuntu",
         )
@@ -162,7 +162,7 @@ def test_apt_invalid_missing_components():
 def test_apt_invalid_missing_suites():
     with pytest.raises(errors.PackageRepositoryValidationError) as exc_info:
         PackageRepositoryApt(
-            key_id="test-key-id",
+            key_id="A" * 40,
             components=["main"],
             url="http://archive.ubuntu.com/ubuntu",
         )
@@ -178,7 +178,7 @@ def test_apt_invalid_missing_suites():
 def test_apt_invalid_suites_as_path():
     with pytest.raises(errors.PackageRepositoryValidationError) as exc_info:
         PackageRepositoryApt(
-            key_id="test-key-id",
+            key_id="A" * 40,
             suites=["my-suite/"],
             url="http://archive.ubuntu.com/ubuntu",
         )
@@ -192,27 +192,20 @@ def test_apt_invalid_suites_as_path():
 
 
 def test_apt_install(mock_repo, tmp_path):
-    mock_repo.install_gpg_key_id.return_value = True
-
     repo = PackageRepositoryApt(
         architectures=["amd64", "i386"],
         components=["main", "multiverse"],
         formats=["deb", "deb-src"],
-        key_id="test-key-id",
+        key_id="A" * 40,
         key_server="xkeyserver.ubuntu.com",
         name="some-name",
         suites=["xenial", "xenial-updates"],
         url="http://archive.ubuntu.com/ubuntu",
     )
 
-    repo.install(keys_path=tmp_path)
+    repo.install()
 
     assert mock_repo.mock_calls == [
-        mock.call.install_gpg_key_id(
-            key_id="test-key-id",
-            key_server="xkeyserver.ubuntu.com",
-            keys_path=tmp_path,
-        ),
         mock.call.install_sources(
             architectures=["amd64", "i386"],
             components=["main", "multiverse"],
@@ -225,18 +218,13 @@ def test_apt_install(mock_repo, tmp_path):
 
 
 def test_apt_install_with_path(mock_repo, tmp_path):
-    mock_repo.install_gpg_key_id.return_value = True
-
     repo = PackageRepositoryApt(
-        key_id="test-key-id", path="x", url="http://archive.ubuntu.com/ubuntu",
+        key_id="A" * 40, path="x", url="http://archive.ubuntu.com/ubuntu",
     )
 
-    repo.install(keys_path=tmp_path)
+    repo.install()
 
     assert mock_repo.mock_calls == [
-        mock.call.install_gpg_key_id(
-            key_id="test-key-id", key_server=None, keys_path=tmp_path,
-        ),
         mock.call.install_sources(
             architectures=None,
             components=None,
@@ -249,18 +237,13 @@ def test_apt_install_with_path(mock_repo, tmp_path):
 
 
 def test_apt_install_implied_path(mock_repo, tmp_path):
-    mock_repo.install_gpg_key_id.return_value = True
-
     repo = PackageRepositoryApt(
-        key_id="test-key-id", url="http://archive.ubuntu.com/ubuntu",
+        key_id="A" * 40, url="http://archive.ubuntu.com/ubuntu",
     )
 
-    repo.install(keys_path=tmp_path)
+    repo.install()
 
     assert mock_repo.mock_calls == [
-        mock.call.install_gpg_key_id(
-            key_id="test-key-id", key_server=None, keys_path=tmp_path,
-        ),
         mock.call.install_sources(
             architectures=None,
             components=None,
@@ -277,7 +260,7 @@ def test_apt_marshal():
         architectures=["amd64", "i386"],
         components=["main", "multiverse"],
         formats=["deb", "deb-src"],
-        key_id="test-key-id",
+        key_id="A" * 40,
         key_server="xkeyserver.ubuntu.com",
         name="test-name",
         suites=["xenial", "xenial-updates"],
@@ -288,7 +271,7 @@ def test_apt_marshal():
         "architectures": ["amd64", "i386"],
         "components": ["main", "multiverse"],
         "formats": ["deb", "deb-src"],
-        "key-id": "test-key-id",
+        "key-id": "A" * 40,
         "key-server": "xkeyserver.ubuntu.com",
         "name": "test-name",
         "suites": ["xenial", "xenial-updates"],
@@ -302,7 +285,7 @@ def test_apt_unmarshal_invalid_extra_keys():
         "architectures": ["amd64", "i386"],
         "components": ["main", "multiverse"],
         "formats": ["deb", "deb-src"],
-        "key-id": "test-key-id",
+        "key-id": "A" * 40,
         "key-server": "keyserver.ubuntu.com",
         "name": "test-name",
         "suites": ["xenial", "xenial-updates"],
@@ -348,7 +331,7 @@ def test_apt_unmarshal_invalid_type():
         "architectures": ["amd64", "i386"],
         "components": ["main", "multiverse"],
         "formats": ["deb", "deb-src"],
-        "key-id": "test-key-id",
+        "key-id": "A" * 40,
         "key-server": "keyserver.ubuntu.com",
         "name": "test-name",
         "suites": ["xenial", "xenial-updates"],
@@ -433,14 +416,12 @@ def test_ppa_unmarshal_invalid_apt_ppa_extra_keys():
     )
 
 
-def test_ppa_install(tmp_path, mock_repo):
+def test_ppa_install(mock_repo):
     repo = PackageRepositoryAptPpa(ppa="test/ppa")
 
-    repo.install(keys_path=tmp_path)
+    repo.install()
 
-    assert mock_repo.mock_calls == [
-        mock.call.install_ppa(keys_path=tmp_path, ppa="test/ppa")
-    ]
+    assert mock_repo.mock_calls == [mock.call.install_ppa(ppa="test/ppa")]
 
 
 def test_unmarshal_package_repositories_list_none():
@@ -468,7 +449,7 @@ def test_unmarshal_package_repositories_list_apt():
         "architectures": ["amd64", "i386"],
         "components": ["main", "multiverse"],
         "formats": ["deb", "deb-src"],
-        "key-id": "test-key-id",
+        "key-id": "A" * 40,
         "key-server": "keyserver.ubuntu.com",
         "name": "test-name",
         "suites": ["xenial", "xenial-updates"],
@@ -493,7 +474,7 @@ def test_unmarshal_package_repositories_list_all():
         "architectures": ["amd64", "i386"],
         "components": ["main", "multiverse"],
         "formats": ["deb", "deb-src"],
-        "key-id": "test-key-id",
+        "key-id": "A" * 40,
         "key-server": "keyserver.ubuntu.com",
         "name": "test-name",
         "suites": ["xenial", "xenial-updates"],
