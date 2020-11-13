@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
+import pathlib
 import requests
 import shutil
 import subprocess
@@ -131,6 +132,9 @@ class FileBase(Base):
             self.file = os.path.join(self.source_dir, os.path.basename(self.source))
         else:
             self.file = filepath
+
+        # Make parent directory as needed.
+        pathlib.Path(self.file).parent.mkdir(parents=True, exist_ok=True)
 
         # First check if we already have the source file cached.
         file_cache = FileCache()
